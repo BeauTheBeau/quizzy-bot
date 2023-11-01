@@ -38,9 +38,7 @@ client.commands = new Collection(); client.buttons = new Collection(); client.al
 clientLogger.info(`Connecting to MongoDB...`)
 clientLogger.info(`${process.env.MONGO_URL}/${process.env.MONGO_DB || process.env.BOT_NAME || 'predicto-bot'}`)
 
-mongoose.connect(`${process.env.MONGO_URL}/${process.env.MONGO_DB || process.env.BOT_NAME || 'predicto-bot'}`, {
-    useNewUrlParser: true, useUnifiedTopology: true
-}).then(() => {
+mongoose.connect(`${process.env.MONGO_URL}/${process.env.MONGO_DB || process.env.BOT_NAME || 'predicto-bot'}`).then(() => {
     clientLogger.success(`Connected to MongoDB database`)
 }).catch((err) => {
     clientLogger.error(`Failed to connect to MongoDB database, reason: ${err}`)
