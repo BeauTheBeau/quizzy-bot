@@ -47,7 +47,7 @@ mongoose.connect(`${process.env.MONGO_URL}/${process.env.MONGO_DB || process.env
 // ==================== //
 
 // Load commands and buttons
-async function loadCommands(dir = './commands') {
+async function loadCommands(dir = './src/commands') {
     clientLogger.info(`Loading commands from ${dir}...`)
     const commandFiles = fs.readdirSync(path.join(__dirname, '..', dir)).filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
@@ -57,7 +57,7 @@ async function loadCommands(dir = './commands') {
     }
 }
 
-async function loadButtons(dir = './buttons') {
+async function loadButtons(dir = './src/buttons') {
     clientLogger.info(`Loading buttons from ${dir}...`)
     const buttonFiles = fs.readdirSync(path.join(__dirname, '..', dir)).filter(file => file.endsWith('.js'));
     for (const file of buttonFiles) {
@@ -74,11 +74,11 @@ clientLogger.info(`Logging in to Discord...`)
 client.login(process.env.DEV_MODE ? process.env.TOKEN : process.env.DEV_TOKEN).then(async () => {
     clientLogger.success(`Logged in to Discord`)
 
-    // Load commands and buttons, if the directory exists
+    // Load commands and buttons, if the appropriate directory exists
 
     // If arg --no-commands is passed, don't load commands
     if (arguments.includes('--no-commands')) clientLogger.warn(`Skipping loading commands`)
-    else if (fs.existsSync(path.join(__dirname, '..', 'commands'))) {
+    else if (fs.existsSync(path.join(__dirname, './commands/'))) {
         await loadCommands();
         await require('./handlers/commands')(client);
     }
@@ -86,16 +86,11 @@ client.login(process.env.DEV_MODE ? process.env.TOKEN : process.env.DEV_TOKEN).t
 
     // If arg --no-buttons is passed, don't load buttons
     if (arguments.includes('--no-buttons')) clientLogger.warn(`Skipping loading buttons`)
-    else if (fs.existsSync(path.join(__dirname, '..', 'buttons'))) {
+    else if (fs.existsSync(path.join(__dirname, './buttons/'))) {
         await loadButtons();
         await require('./handlers/buttons')(client);
     }
     else clientLogger.warn(`Skipping loading buttons as there is no buttons directory`)
-
-    // Initialize command and button handlers
-    // await require('./handlers/buttons')(client);
-
-
 
 }).catch((err) => {
     clientLogger.error(`Failed to login to Discord`)
