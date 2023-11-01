@@ -8,7 +8,7 @@ const colours = {
 }
 
 const typeColours = {
-    WARNING: chalk.hex(colours.WHITE).bgHex(colours.WARNING).bold,
+    WARNING: chalk.hex(colours.BLACK).bgHex(colours.WARNING).bold,
     ERROR: chalk.hex(colours.WHITE).bgHex(colours.ERROR).bold,
     SUCCESS: chalk.rgb(20, 20, 20).bgHex(colours.SUCCESS).bold,
     INFO: chalk.hex(colours.BLACK).bgHex(colours.INFO).bold,
