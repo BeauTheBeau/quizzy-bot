@@ -6,14 +6,14 @@
 // ==================== //
 
 require('dotenv').config();
-const { Logger } = require('../utils/logger');
-const { REST, Routes } = require('discord.js');
+const {Logger} = require('../utils/logger');
+const {REST, Routes} = require('discord.js');
 const {join} = require("path");
 const fs = require('fs');
 
 const commandsLogger = new Logger('cmds', true);
 const token = process.env.DEV_MODE ? process.env.TOKEN : process.env.DEV_TOKEN;
-const rest = new REST({ version: '9' }).setToken(token);
+const rest = new REST({version: '9'}).setToken(token);
 
 // ==================== //
 
@@ -74,7 +74,6 @@ module.exports = async (client) => {
 
     client.on('interactionCreate', async interaction => {
 
-        if (!interaction.isCommand()) return;
 
         const command = client.commands.get(interaction.commandName);
         if (!command) {
@@ -82,11 +81,21 @@ module.exports = async (client) => {
             return;
         }
 
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            commandsLogger.error(error);
-            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+        if (interaction.isCommand()) {
+            try {
+                await command.execute(interaction);
+            } catch (error) {
+                commandsLogger.error(error);
+                commandsLogger.error(error.stack)
+                await interaction.reply({content: 'There was an error while executing this command!', ephemeral: true});
+            }
+        } else if (interaction.isAutocomplete()) {
+            try {
+                await command.autocomplete(interaction);
+            } catch (error) {
+                commandsLogger.error(error);
+                commandsLogger.error(error.stack)
+            }
         }
     });
 }
