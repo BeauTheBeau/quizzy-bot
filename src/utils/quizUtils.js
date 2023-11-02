@@ -69,7 +69,7 @@ function createAnswerButtons(allAnswers, correctAnswer, reveal = false) {
     return answerButtons;
 }
 
-function collectAnswers(interaction, correctAnswer, incorrectAnswers) {
+function collectAnswers(interaction, correctAnswer, incorrectAnswers, message) {
     const userAnswers = [];
 
     const filter = (i) => {
@@ -93,7 +93,8 @@ function collectAnswers(interaction, correctAnswer, incorrectAnswers) {
 
             // Edit the interaction button row
             const answerButtons = createAnswerButtons([...incorrectAnswers, correctAnswer], correctAnswer, true);
-            await interaction.editReply({ components: [answerButtons] });
+            if (message) await message.edit({ components: [answerButtons] });
+            else await interaction.editReply({ components: [answerButtons] });
         });
     });
 }
