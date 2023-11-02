@@ -24,8 +24,7 @@ logger.separator()
 // Create a new Discord client and logger
 const clientLogger = new Logger('client', false)
 const client = new Client({
-    // TODO: Change this to only the intents we need, this is not ok
-    intents: Object.values(GatewayIntentBits).reduce((a, b) => a | b, 0),
+    intents: [ GatewayIntentBits.Guilds ],
     allowedMentions: { parse: [], repliedUser: true } // Disables mentions by default
 });
 
