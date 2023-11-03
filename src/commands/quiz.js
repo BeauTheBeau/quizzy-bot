@@ -73,7 +73,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setTitle(`Q${i + 1}: ${question}`)
-                .setDescription(`Answers due <t:${Math.floor(Date.now() / 1000) + 15}:R>`)
+                .setDescription(`Answers due <t:${Math.floor(Date.now() / 1000) + 20}:R>`)
                 .setColor(questionDifficulty === 'easy' ? '#4F9D55' : questionDifficulty === 'medium' ? '#B7B120' : '#B44C4E')
                 .setFooter({
                     text: `${getCategoryEmoji(questionCategory)} ${questionCategory} | ${emojis.difficulty[questionDifficulty]} `
@@ -108,7 +108,7 @@ module.exports = {
 
             for (let i = 0; i < correctUsers.length; i++) {
                 const user = await getUser(correctUsers[i].userId);
-                await awardPoints(questionDifficulty, correctUsers[i].userId);
+                const points = await awardPoints(questionDifficulty, correctUsers[i].userId);
 
                 // Check if the user has already answered this question
                 if (user.correct_answers.some((answer) => answer.question === question)) {
@@ -116,6 +116,14 @@ module.exports = {
                     user.correct_answers[index].amountOfTimes++;
                 } else {
                     user.correct_answers.push({question, amountOfTimes: 1, category: questionCategory});
+                }
+
+                // Add the points to the points table
+                if (pointsTable.some((user) => user.userId === correctUsers[i].userId)) {
+                    const index = pointsTable.findIndex((user) => user.userId === correctUsers[i].userId);
+                    pointsTable[index].points += points;
+                } else {
+                    pointsTable.push({userId: correctUsers[i].userId, points});
                 }
 
                 await user.save();
@@ -137,10 +145,6 @@ module.exports = {
             }
 
             // Update the points table
-            pointsTable = pointsTable.filter((user) => !correctUsers.some((correctUser) => correctUser.userId === user.userId));
-            pointsTable = pointsTable.concat(correctUsers.map((user) => {
-                return {userId: user.userId, points: user.answer === correctAnswer ? 1 : 0};
-            }));
 
             // Wait 5 seconds before starting the next round
             if (i !== rounds - 1) {
@@ -149,7 +153,22 @@ module.exports = {
                 await nextRnd.delete();
             }
             else {
-                interaction.channel.send({content: 'Quiz finished!'});
+                const finishedMsg = await interaction.channel.send({content: 'Quiz finished!'});
+
+                // Sort the points table
+                pointsTable = pointsTable.sort((a, b) => b.points - a.points);
+
+
+                // Create the points table embed
+                const pointsTableEmbed = new EmbedBuilder()
+                    .setTitle('Points table')
+                    .setDescription(pointsTable.map((user, index) => `${index + 1}. <@${user.userId}> - ${user.points} points`).join('\n'))
+                    .setColor('#4F9D55');
+
+                await finishedMsg.edit({embeds: [pointsTableEmbed]});
+
+
+
             }
 
 

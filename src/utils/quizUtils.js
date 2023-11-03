@@ -78,7 +78,7 @@ function collectAnswers(interaction, correctAnswer, incorrectAnswers, message) {
 
     const collector = interaction.channel.createMessageComponentCollector({
         filter,
-        time: 15000,
+        time: 20000,
     });
 
     collector.on('collect', async (i) => {
