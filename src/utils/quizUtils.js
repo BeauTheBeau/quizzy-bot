@@ -1,9 +1,9 @@
 
-const { emojis, trivia_categories } = require('../misc.js');
+const { trivia_categories } = require('../misc.js');
 const {ActionRowBuilder, ButtonStyle, ButtonBuilder, EmbedBuilder} = require("discord.js");
 const userSchema = require('../models/userModel.js');
 const guildModel = require('../models/guildModel.js');
-const { logger, Logger } = require('./logger');
+const { logger } = require('./logger');
 
 async function getGuild(guildId) {
 
@@ -116,13 +116,15 @@ function collectAnswers(interaction, correctAnswer, incorrectAnswers, message) {
     });
 }
 
-async function awardPoints(difficulty, userId) {
+async function awardPoints(difficulty, userId, multiplier = 1) {
     let points; difficulty = difficulty.toLowerCase();
 
     if (difficulty === 'easy') points = 1;
     else if (difficulty === 'medium') points = 3;
     else if (difficulty === 'hard') points = 5;
     else points = 0;
+
+    points *= multiplier;
 
     const user = await getUser(userId);
     user.points += points;
