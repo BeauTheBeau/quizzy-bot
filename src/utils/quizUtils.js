@@ -2,7 +2,24 @@
 const { emojis, trivia_categories } = require('../misc.js');
 const {ActionRowBuilder, ButtonStyle, ButtonBuilder, EmbedBuilder} = require("discord.js");
 const userSchema = require('../models/userModel.js');
+const guildModel = require('../models/guildModel.js');
 const { logger, Logger } = require('./logger');
+
+async function getGuild(guildId) {
+
+    let guild;
+    try {
+        guild = await guildModel.findOne({ guild_id: guildId });
+        if (!guild) guild = await guildModel.create({ guild_id: guildId });
+    } catch (err) {
+        logger.error(`Failed to get guild`);
+        logger.error(err.stack)
+        return null;
+    }
+
+    return guild;
+
+}
 
 async function getUser(userId) {
     let user;
@@ -115,4 +132,4 @@ async function awardPoints(difficulty, userId) {
 
 }
 
-module.exports = { fetchRandomQuestion, shuffleArray, createAnswerButtons, collectAnswers, awardPoints, getUser };
+module.exports = { fetchRandomQuestion, shuffleArray, createAnswerButtons, collectAnswers, awardPoints, getUser, getGuild };
