@@ -1,11 +1,18 @@
 require('dotenv').config()
 
 // Import necessary modules
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { logger, Logger } = require('./utils/logger');
+const {Client, GatewayIntentBits, Collection, EmbedBuilder} = require('discord.js');
+const {logger, Logger} = require('./utils/logger');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
+const guildModel = require('./models/guildModel.js');
+const cron = require('node-cron');
+
+const {fetchRandomQuestion} = require('./utils/quizUtils.js');
+const {getCategoryEmoji, capitalizeFirstLetter} = require('./utils/misc.js');
+const {shuffleArray, createAnswerButtons, awardPoints, getUser} = require("./utils/quizUtils");
+const {emojis} = require('./misc.js');
 
 const arguments = process.argv.slice(2);
 
@@ -24,12 +31,14 @@ logger.separator()
 // Create a new Discord client and logger
 const clientLogger = new Logger('client', false)
 const client = new Client({
-    intents: [ GatewayIntentBits.Guilds ],
-    allowedMentions: { parse: [], repliedUser: true } // Disables mentions by default
+    intents: [GatewayIntentBits.Guilds],
+    allowedMentions: {parse: [], repliedUser: true} // Disables mentions by default
 });
 
 // Create a new collection for commands and buttons
-client.commands = new Collection(); client.buttons = new Collection(); client.aliases = new Collection();
+client.commands = new Collection();
+client.buttons = new Collection();
+client.aliases = new Collection();
 
 // ==================== //
 
@@ -42,6 +51,167 @@ mongoose.connect(`${process.env.MONGO_URL}/${process.env.MONGO_DB || process.env
 }).catch((err) => {
     clientLogger.error(`Failed to connect to MongoDB database, reason: ${err}`)
 });
+
+// ==================== //
+
+async function runRandomQuiz(guild) {
+
+    clientLogger.info(`Starting random quiz for guild ${guild.guild_id}...`)
+
+    // Get the channel
+    const channel = await client.channels.fetch(guild.random_quiz_channel);
+    if (!channel) return clientLogger.warn(`Channel ${guild.random_quiz_channel} does not exist, skipping`)
+
+    // Send the first question
+    const {
+        question,
+        difficulty: questionDifficulty,
+        correct_answer: correctAnswer,
+        incorrect_answers: incorrectAnswers,
+        category: questionCategory
+    } = await fetchRandomQuestion();
+    let allAnswers = [correctAnswer, ...incorrectAnswers];
+    allAnswers = shuffleArray(allAnswers);
+    allAnswers = allAnswers.map((answer) => decodeURI(answer));
+
+    const embed = new EmbedBuilder()
+        .setTitle(decodeURI(question))
+        .setDescription(`Expires <t:${Math.floor(Date.now() / 1000) + 120}:R> or when someone answers correctly. `
+            + `1.5x points for the first correct answer!`)
+        .setColor(questionDifficulty === 'easy' ? '#4F9D55' : questionDifficulty === 'medium' ? '#B7B120' : '#B44C4E')
+        .setFooter({text: `${getCategoryEmoji(questionCategory)} ${questionCategory} | ${emojis.difficulty[questionDifficulty]} ${capitalizeFirstLetter(questionDifficulty)}`});
+
+    const buttons = createAnswerButtons(allAnswers, correctAnswer);
+    let message;
+
+    try {
+        message = await channel.send({embeds: [embed], components: [buttons]});
+    } catch (error) {
+        clientLogger.error(`Failed to send message in channel ${guild.random_quiz_channel}`)
+        clientLogger.error(error)
+        return;
+    }
+
+    // Collect answers
+    const userAnswers = [];
+    const filter = (i) => {
+        return i.customId === correctAnswer || incorrectAnswers.includes(i.customId);
+    };
+
+    const collector = message.createMessageComponentCollector({filter, time: 120000});
+    let correctlyAnswered = false;
+
+    // End the quiz when a user is correct
+    collector.on('collect', async (i) => {
+
+        // Check if the user has already answered
+        if (userAnswers.some((answer) => answer.userId === i.user.id)) return i.reply({
+            content: 'You have already answered this question',
+            ephemeral: true
+        });
+        await i.reply({content: 'You answered **' + i.customId + '**', ephemeral: true});
+
+        // Add the user to the list of users who answered correctly
+        userAnswers.push({userId: i.user.id, answer: i.customId});
+
+        // Award points to the user
+        await awardPoints(questionDifficulty, i.user.id, 1.5);
+
+        // Check if the user has already answered this question
+        const user = await getUser(i.user.id);
+        if (i.customId === correctAnswer) {
+
+            correctlyAnswered = true;
+
+            // Remove all buttons
+            const newButtons = createAnswerButtons(allAnswers, correctAnswer, true);
+            await message.edit({embeds: [embed], components: [newButtons]});
+
+            // Send the result embed, saying that the user won
+            const resultEmbed = new EmbedBuilder()
+                .setTitle(`${i.user.displayName} won!`)
+                .setDescription(`The correct answer was ${correctAnswer}`)
+                .setColor('#4F9D55')
+
+            await message.reply({embeds: [resultEmbed]});
+            collector.stop();
+
+        } else {
+            user.correct_answers.push({question, amountOfTimes: 1, category: questionCategory});
+        }
+        await user.save();
+
+    });
+
+    // End the quiz when the time is up
+    collector.on('end', async (collected) => {
+
+        if (correctlyAnswered) return;
+
+        // Remove all buttons
+        const newButtons = createAnswerButtons(allAnswers, correctAnswer, true);
+        await message.edit({embeds: [embed], components: [newButtons]});
+
+        const resultEmbed = new EmbedBuilder()
+            .setTitle(`The correct answer was ${correctAnswer}`)
+            .setDescription(`Nobody answered correctly. The answer was **${correctAnswer}**`)
+            .setColor('#B44C4E')
+
+        await message.reply({embeds: [resultEmbed]});
+
+    });
+
+}
+
+async function scheduleRandomQuizzes(guildId = null) {
+    const guilds = await guildModel.find({random_quiz_interval: {$gt: 0}});
+    const scheduledTasks = new Map();
+
+    async function updateTask(guild) {
+        const intervalInMinutes = guild.random_quiz_interval;
+        const guildId = guild.guild_id;
+
+        // Check if a task for this guild already exists and destroy it
+        if (scheduledTasks.has(guildId)) scheduledTasks.get(guildId).destroy();
+
+
+        // Create new cron job to run the quiz
+        const task = cron.schedule(`*/${intervalInMinutes} * * * *`, async () => {
+            await runRandomQuiz(guild);
+        });
+
+        scheduledTasks.set(guildId, task);
+    }
+
+    // Create, update scheduled tasks for each guild
+    if (guildId) {
+        const guild = guilds.find((guild) => guild.guild_id === guildId);
+        if (!guild) return clientLogger.warn(`Guild ${guildId} not found, skipping`);
+        await updateTask(guild);
+    } else {
+        guilds.forEach((guild) => {
+            updateTask(guild);
+        });
+
+
+    }
+
+    // Handle guilds that no longer have scheduled tasks (e.g., when interval is set to 0) or ones with multiple tasks
+    scheduledTasks.forEach((task, guildId) => {
+        if (!guilds.some((guild) => guild.guild_id === guildId)) {
+            task.destroy();
+            scheduledTasks.delete(guildId);
+        }
+
+        if (guilds.filter((guild) => guild.guild_id === guildId).length > 1) {
+            task.destroy();
+            scheduledTasks.delete(guildId);
+            updateTask(guilds.find((guild) => guild.guild_id === guildId));
+        }
+
+    });
+
+}
 
 // ==================== //
 
@@ -80,16 +250,17 @@ client.login(process.env.DEV_MODE ? process.env.TOKEN : process.env.DEV_TOKEN).t
     else if (fs.existsSync(path.join(__dirname, './commands/'))) {
         await loadCommands();
         await require('./handlers/commands')(client);
-    }
-    else clientLogger.warn(`Skipping loading commands as there is no commands directory`)
+    } else clientLogger.warn(`Skipping loading commands as there is no commands directory`)
 
     // If arg --no-buttons is passed, don't load buttons
     if (arguments.includes('--no-buttons')) clientLogger.warn(`Skipping loading buttons`)
     else if (fs.existsSync(path.join(__dirname, './buttons/'))) {
         await loadButtons();
         await require('./handlers/buttons')(client);
-    }
-    else clientLogger.warn(`Skipping loading buttons as there is no buttons directory`)
+    } else clientLogger.warn(`Skipping loading buttons as there is no buttons directory`)
+
+    await scheduleRandomQuizzes(); // Schedule random quizzes
+    setInterval(scheduleRandomQuizzes, 60 * 60 * 1000); // Update scheduled quizzes every hour
 
 }).catch((err) => {
     clientLogger.error(`Failed to login to Discord`)
@@ -109,3 +280,5 @@ process.on('uncaughtException', (err) => {
     clientLogger.error(`Uncaught exception`)
     clientLogger.error(err.stack)
 })
+
+module.exports = {scheduleRandomQuizzes}
