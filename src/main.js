@@ -13,6 +13,7 @@ const {fetchRandomQuestion} = require('./utils/quizUtils.js');
 const {getCategoryEmoji, capitalizeFirstLetter} = require('./utils/misc.js');
 const {shuffleArray, createAnswerButtons, awardPoints, getUser} = require("./utils/quizUtils");
 const {emojis} = require('./misc.js');
+const { latencyLogger } = require('./utils/latencyLogger.js');
 
 const arguments = process.argv.slice(2);
 
@@ -240,6 +241,7 @@ async function loadButtons(dir = './src/buttons') {
 clientLogger.info(`Logging in to Discord...`)
 client.login(process.env.DEV_MODE ? process.env.TOKEN : process.env.DEV_TOKEN).then(async () => {
     clientLogger.success(`Logged in to Discord`)
+    await latencyLogger(client);
 
     // Load commands and buttons, if the appropriate directory exists
 
