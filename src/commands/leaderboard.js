@@ -46,6 +46,11 @@ module.exports = {
             .setColor('#FF0000')
             .setThumbnail(interaction.client.user.displayAvatarURL({dynamic: true}))
 
+
+        // Check if leaderboard is empty & exists
+        if (leaderboard.length === 0) return interaction.reply({content: 'The leaderboard is empty!', ephemeral: true});
+
+
         if (sort === 'points') {
             embed.setDescription(
                 leaderboard.slice((page - 1) * 10, page * 10).map((user, index) => {
@@ -59,6 +64,7 @@ module.exports = {
                 }).join('\n')
             )
         }
+
 
         const pageRow = new ActionRowBuilder()
             .addComponents(
