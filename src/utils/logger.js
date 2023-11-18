@@ -16,12 +16,13 @@ const typeColours = {
     LOGGER: chalk.hex(colours.WHITE).bgHex(colours.DARK).bold
 }
 
-const loggers = []
+const loggers = [];
+const movedLogs = [];
 
 class Logger {
     constructor(name = '', silent = false) {
         this.logFileName = this.getFormattedFileName(name);
-        this.logFilePath = path.join(__dirname, '../../logs', this.logFileName);
+        this.logFilePath = path.join(__dirname, '../../logs/latest', this.logFileName);
         this.logTypes = ["WARNING", "ERROR", "SUCCESS", "INFO"];
         this.maxLogTypeLength = this.getMaxLogTypeLength();
         this.name = name;
@@ -34,9 +35,34 @@ class Logger {
             this.log(`SUCCESS`, `New logger ${typeColours.LOGGER(this.name)} created`)
             this.log(`INFO`,    `Logging to ${this.logFilePath.split('/').slice(-2).join('/')}`)
         }
+
+        // Move previous log files from logs/latest to logs/ if they are not in the loggers array
+        const latestLogDir = path.join(__dirname, '../../logs/latest');
+        const logDir = path.join(__dirname, '../../logs');
+
+        fs.readdir(latestLogDir, (err, files) => {
+
+            if (err) {
+                this.log(`ERROR`, `Failed to read log directory: ${err}`)
+                return;
+            }
+
+            files.forEach(file => {
+                if (movedLogs.includes(file)) return;
+                if (file === this.logFileName) return;
+                if (loggers.some(logger => logger.logFileName === file)) return;
+                fs.rename(path.join(latestLogDir, file), path.join(logDir, file), err => {
+                    movedLogs.push(file);
+                })
+            })
+
+        });
+
     }
 
-    getFormattedFileName(name) {
+
+
+    getFormattedFileName(name) {v
         const now = new Date();
         const date = now.toISOString().slice(0, 10);
         const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');
@@ -63,9 +89,10 @@ class Logger {
 
     ensureLogDirectory() {
         const logDir = path.join(__dirname, '../../logs');
-        if (!fs.existsSync(logDir)) {
-            fs.mkdirSync(logDir);
-        }
+        if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
+
+        const latestLogDir = path.join(__dirname, '../../logs/latest');
+        if (!fs.existsSync(latestLogDir)) fs.mkdirSync(latestLogDir);
     }
 
     separator() {
