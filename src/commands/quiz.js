@@ -3,6 +3,8 @@ const {emojis, trivia_categories} = require('../misc.js');
 const {getCategoryEmoji, capitalizeFirstLetter} = require('../utils/misc.js');
 const { awardPoints, getUser, fetchRandomQuestion, shuffleArray, createAnswerButtons, collectAnswers } = require('../utils/quizUtils.js');
 
+let quizzesOnGoing = [];
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('quiz')
@@ -11,7 +13,8 @@ module.exports = {
             .setName('rounds')
             .setDescription('The amount of rounds')
             .setRequired(false)
-        )
+            .setMinValue(1)
+            .setMaxValue(10))
         .addStringOption(option => option
             .setName('category')
             .setDescription('The category of the question')
@@ -43,6 +46,9 @@ module.exports = {
     },
 
     async execute(interaction) {
+
+        if (quizzesOnGoing.some((quiz) => quiz.channelId === interaction.channelId)) return interaction.reply({content: 'There is already a quiz going on in this channel'});
+        else quizzesOnGoing.push({channelId: interaction.channelId});
 
         const category = interaction.options.getString('category');
         const difficulty = interaction.options.getString('difficulty');
