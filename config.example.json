@@ -1,0 +1,22 @@
+{
+  "bot": {
+    "name": "QuizzyBot",
+    "description": "A bot that quizzes you on various topics!",
+    "developerId": "",
+
+    "botId": "",
+    "devBotId": ""
+  },
+  "links": {
+    "devGithub": "",
+    "botGithub": "",
+    "invite": "",
+    "support": ""
+  },
+  "emojis": {
+    "category": {},
+    "difficulty": {},
+    "github": "",
+    "discordJs": ""
+  }
+}
