@@ -1,4 +1,4 @@
-[README.md](README.md) • [LICENSE](LICENSE)
+[README.md](../README.md) • [LICENSE](../LICENSE)
 
 # Hosting
 

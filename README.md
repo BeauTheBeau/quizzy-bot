@@ -1,5 +1,5 @@
 
-[HOSTING.md](HOSTING.md) • [LICENSE](LICENSE)
+[HOSTING.md](docs/HOSTING.md) • [LICENSE](LICENSE)
 
 # QuizzyBot
 
@@ -16,7 +16,7 @@
     * [Commands](#commands)
     * [Random Quiz](#random-quiz)
     * [Categories](#categories)
-  * [Technologies](#technologies)
+  * [Attributions](#attributions)
   * [License](#license)
 <!-- TOC -->
 
@@ -32,7 +32,7 @@ QuizzyBot sources questions from the [**Open Trivia DB**](https://opentdb.com/)
 
 ## Getting Started
 
-If you'd like to host QuizzyBot, please see [HOSTING.md](HOSTING.md) for instructions.
+If you'd like to host QuizzyBot, please see [HOSTING.md](docs/HOSTING.md) for instructions.
 Otherwise, you can add QuizzyBot to your server by
 clicking [here](https://discord.com/api/oauth2/authorize?client_id=1168686016866041916&permissions=2048&scope=bot).
 
