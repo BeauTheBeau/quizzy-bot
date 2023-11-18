@@ -44,9 +44,7 @@ client.aliases = new Collection();
 
 // Connect to MongoDB
 clientLogger.info(`Connecting to MongoDB...`)
-clientLogger.info(`${process.env.MONGO_URL}/${process.env.MONGO_DB || process.env.BOT_NAME || 'predicto-bot'}`)
-
-mongoose.connect(`${process.env.MONGO_URL}/${process.env.MONGO_DB || process.env.BOT_NAME || 'predicto-bot'}`).then(() => {
+mongoose.connect(`${process.env.MONGO_URL}`).then(() => {
     clientLogger.success(`Connected to MongoDB database`)
 }).catch((err) => {
     clientLogger.error(`Failed to connect to MongoDB database, reason: ${err}`)
@@ -272,13 +270,13 @@ client.login(process.env.DEV_MODE ? process.env.TOKEN : process.env.DEV_TOKEN).t
 // Handle unhandled rejections
 process.on('unhandledRejection', (err) => {
     clientLogger.error(`Unhandled rejection`)
-    clientLogger.error(err.stack)
+    clientLogger.error(err)
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
     clientLogger.error(`Uncaught exception`)
-    clientLogger.error(err.stack)
+    clientLogger.error(err)
 })
 
 module.exports = {scheduleRandomQuizzes}
