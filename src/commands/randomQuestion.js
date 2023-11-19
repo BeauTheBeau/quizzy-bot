@@ -5,7 +5,7 @@ const { awardPoints, getUser, fetchRandomQuestion, shuffleArray, createAnswerBut
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('randomquestion')
+        .setName('random-question')
         .setDescription('Get a random question')
         .addStringOption(option => option
             .setName('category')
@@ -27,12 +27,8 @@ module.exports = {
         const focus = interaction.options.getFocused(true);
 
         if (focus.name === 'category') {
-            const response = await fetch(`https://opentdb.com/api_category.php`);
-            const data = await response.json(); // data: trivia_categories: [{ id, name }]
-
-            const choices = data.trivia_categories.map(category => { return {name: category.name, value: category.id.toString()} });
+            const choices = trivia_categories.map(category => { return {name: category.name, value: category.id.toString()} });
             const filtered = choices.filter(choice => choice.name.toLowerCase().includes(focus.value.toLowerCase()));
-
             await interaction.respond(filtered.map(choice => ({name: choice.name, value: choice.value})))
         }
     },
