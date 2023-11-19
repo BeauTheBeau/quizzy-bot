@@ -83,7 +83,7 @@ module.exports = async (client) => {
 
         if (interaction.isCommand()) {
             try {
-                await command.execute(interaction);
+                await command.execute(interaction, client);
             } catch (error) {
                 commandsLogger.error(error);
                 commandsLogger.error(error.stack)
@@ -91,7 +91,7 @@ module.exports = async (client) => {
             }
         } else if (interaction.isAutocomplete()) {
             try {
-                await command.autocomplete(interaction);
+                await command.autocomplete(interaction, client);
             } catch (error) {
                 commandsLogger.error(error);
                 commandsLogger.error(error.stack)
