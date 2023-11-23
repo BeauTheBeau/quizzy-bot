@@ -218,6 +218,52 @@ async function scheduleRandomQuizzes(guildId = null) {
 
 }
 
+async function getHelp(client, interaction, queriedCommand = null) {
+
+    const data = [];
+    const {commands} = client;
+
+    if (queriedCommand) {
+
+        const command = commands.get(queriedCommand);
+        if (!command) return await interaction.reply({content: 'That\'s not a valid command!', ephemeral: true});
+
+        data.push(`# ${command.data.name}`);
+        data.push(`**Description** ${command.data.description}`);
+        data.push(`**Usage** \`${command.data.name}${command.data.options ? command.data.options.map(option => ` <${option.name}>`) : ''}\``);
+
+        if (command.data.options) {
+            data.push(`## Arguments`);
+
+            for (const option of command.data.options) {
+                data.push(`- **${option.name}** ${option.description}`);
+                data.push(`  - **Required** ${option.required}`);
+                data.push(` - **Choices** ${option.choices ? option.choices.map(choice => `${choice.name}`).join(', ') : 'None'}`);
+            }
+        }
+
+
+    } else {
+        data.push('Here\'s a list of all my commands:');
+
+        for (const command of commands) {
+            data.push(`- **${command[1].data.name}** - ${command[1].data.description}`);
+            data.push(`  - **Usage** \`${command[1].data.name}${command[1].data.options ? command[1].data.options.map(option => ` <${option.name}>`) : ''}\``);
+        }
+
+        data.push(`\nYou can send \`/help [command name]\` to get more info on a specific command!`);
+
+    }
+
+    const embed = new EmbedBuilder()
+        .setTitle('Help')
+        .setDescription(data.join('\n'))
+        .setColor('#4F9D55')
+
+    if (interaction.deferred) await interaction.followUp({embeds: [embed], ephemeral: true});
+    else await interaction.reply({embeds: [embed], ephemeral: true});
+}
+
 // ==================== //
 
 // Load commands and buttons
@@ -287,4 +333,4 @@ process.on('uncaughtException', (err) => {
     clientLogger.error(err)
 })
 
-module.exports = {scheduleRandomQuizzes}
+module.exports = {scheduleRandomQuizzes, getHelp};
