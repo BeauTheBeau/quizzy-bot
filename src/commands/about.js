@@ -5,17 +5,8 @@ const {getHelp} = require('../main');
 
 const config = require('../../config.json');
 
-const emojis = {
-    "github": "<:github:1175470408678510692>",
-    "discordjs": "<:discordjs:1175471859697995859>",
-    "education": ":student:",
-}
-const links = {
-    "github": "https://github.com/beauthebeau",
-    "botGithub": "https://github.com/beauthebeau/quizzy-bot",
-    "discordjs": "https://discord.js.org",
-    "readme": "https://github.com/beauthebeau/quizzy-bot/blob/master/README.md"
-}
+const emojis = config.emojis;
+const links = config.links;
 
 module.exports = {
 
@@ -29,9 +20,9 @@ module.exports = {
             .setTitle('About')
             .setDescription(
                 `${process.env.BOT_NAME} was initially made over 3 days for the *DDevs Buildathon * by <@729567972070391848> `
-                + `([${emojis.github} GitHub](${links.github})) for the **${emojis.education} Education** category.`
+                + `([${emojis.github} GitHub](${links.devGithub})) for the **${emojis.education} Education** category.`
                 + `\n\n`
-                + `The bot is written in JavaScript using the [${emojis.discordjs} discord.js](${links.discordjs}) library `
+                + `The bot is written in JavaScript using the [${emojis.discordJs} discord.js](${links.discordJs}) library `
                 + `and uses the [Open Trivia Database](https://opentdb.com) to generate questions.`
                 + `\n\n`
                 + `The bot is currently in a usable state, but is still under development and will be improved over `
