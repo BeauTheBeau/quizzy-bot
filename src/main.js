@@ -55,6 +55,9 @@ mongoose.connect(`${process.env.MONGO_URL}`).then(() => {
 
 async function runRandomQuiz(guild) {
 
+    // Check if the guild has a quiz channel set
+    const newGuild = await guildModel.findOne({guild_id: guild.guild_id});
+    if (newGuild.random_quiz_interval <= 0 || !newGuild.random_quiz_channel) return;
     clientLogger.info(`Starting random quiz for guild ${guild.guild_id}...`)
 
     // Get the channel
@@ -69,6 +72,7 @@ async function runRandomQuiz(guild) {
         incorrect_answers: incorrectAnswers,
         category: questionCategory
     } = await fetchRandomQuestion();
+
     let allAnswers = [correctAnswer, ...incorrectAnswers];
     allAnswers = shuffleArray(allAnswers);
     allAnswers = allAnswers.map((answer) => decodeURI(answer));
@@ -174,12 +178,17 @@ async function scheduleRandomQuizzes(guildId = null) {
         if (scheduledTasks.has(guildId)) scheduledTasks.get(guildId).destroy();
 
 
-        // Create new cron job to run the quiz
-        const task = cron.schedule(`*/${intervalInMinutes} * * * *`, async () => {
+        // // Create new cron job to run the quiz
+        // const task = cron.schedule(`*/${intervalInMinutes} * * * *`, async () => {
+        //     await runRandomQuiz(guild);
+        // });
+
+        // Every 15 seconds
+        const task2 = cron.schedule(`*/15 * * * * *`, async () => {
             await runRandomQuiz(guild);
         });
 
-        scheduledTasks.set(guildId, task);
+        scheduledTasks.set(guildId, task2);
     }
 
     // Create, update scheduled tasks for each guild
@@ -191,8 +200,6 @@ async function scheduleRandomQuizzes(guildId = null) {
         guilds.forEach((guild) => {
             updateTask(guild);
         });
-
-
     }
 
     // Handle guilds that no longer have scheduled tasks (e.g., when interval is set to 0) or ones with multiple tasks
@@ -207,7 +214,6 @@ async function scheduleRandomQuizzes(guildId = null) {
             scheduledTasks.delete(guildId);
             updateTask(guilds.find((guild) => guild.guild_id === guildId));
         }
-
     });
 
 }
