@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const guildModel = require('./models/guildModel.js');
 const cron = require('node-cron');
+const chalk = require('chalk');
 
 const {fetchRandomQuestion} = require('./utils/quizUtils.js');
 const {getCategoryEmoji, capitalizeFirstLetter} = require('./utils/misc.js');
@@ -21,10 +22,13 @@ const arguments = process.argv.slice(2);
 
 // Log process information
 logger.separator()
+logger.info(`====== Process Information ======`)
 logger.info(`Process ID: ${process.pid}`)
 logger.info(`Node version: ${process.version}`)
 logger.info(`Discord.js version: ${require('discord.js').version}`)
 logger.info(`Mongoose version: ${require('mongoose').version}`)
+logger.info(`Environment: ${process.env.DEV_MODE ? 'Development' : 'Production'}`)
+logger.info(`=================================`)
 logger.separator()
 
 // ==================== //
@@ -273,7 +277,7 @@ async function loadCommands(dir = './src/commands') {
     for (const file of commandFiles) {
         const command = require(path.join(__dirname, '..', dir, file));
         client.commands.set(command.name, command);
-        clientLogger.success(`Loaded command ${command.name}`)
+        clientLogger.success(`Loaded command ${chalk.bold(command.data.name)}`)
     }
 }
 
