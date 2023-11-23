@@ -35,9 +35,15 @@ module.exports = {
             else categoryIncorrectAnswers[category] = 1;
         });
 
-        let worstCategory = Object.keys(categoryIncorrectAnswers).reduce((a, b) => categoryIncorrectAnswers[a] > categoryIncorrectAnswers[b] ? a : b);
-        let bestCategory = Object.keys(categoryCorrectAnswers).reduce((a, b) => categoryCorrectAnswers[a] > categoryCorrectAnswers[b] ? a : b);
+        let worstCategory, bestCategory;
 
+        try {
+            worstCategory = Object.keys(categoryIncorrectAnswers).reduce((a, b) => categoryIncorrectAnswers[a] > categoryIncorrectAnswers[b] ? a : b);
+            bestCategory = Object.keys(categoryCorrectAnswers).reduce((a, b) => categoryCorrectAnswers[a] > categoryCorrectAnswers[b] ? a : b);
+        } catch (e) {
+            worstCategory = 'None'
+            bestCategory = 'None'
+        }
 
 
         const embed = new EmbedBuilder()
