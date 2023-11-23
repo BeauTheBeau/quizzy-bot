@@ -48,7 +48,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setTitle(decodeURI(question))
-            .setDescription(`Answers due <t:${Math.floor(Date.now() / 1000) + 15}:R>`)
+            .setDescription(`Answers due <t:${Math.floor(Date.now() / 1000) + 20}:R>`)
             .setColor(questionDifficulty === 'easy' ? '#4F9D55' : questionDifficulty === 'medium' ? '#B7B120' : '#B44C4E')
             .setFooter({
                 text: `${getCategoryEmoji(questionCategory)} ${questionCategory} | ${emojis.difficulty[questionDifficulty]} `
