@@ -181,18 +181,12 @@ async function scheduleRandomQuizzes(guildId = null) {
         // Check if a task for this guild already exists and destroy it
         if (scheduledTasks.has(guildId)) scheduledTasks.get(guildId).destroy();
 
-
-        // // Create new cron job to run the quiz
-        // const task = cron.schedule(`*/${intervalInMinutes} * * * *`, async () => {
-        //     await runRandomQuiz(guild);
-        // });
-
-        // Every 15 seconds
-        const task2 = cron.schedule(`*/15 * * * * *`, async () => {
+        // Create new cron job to run the quiz
+        const task = cron.schedule(`*/${intervalInMinutes} * * * *`, async () => {
             await runRandomQuiz(guild);
         });
 
-        scheduledTasks.set(guildId, task2);
+        scheduledTasks.set(guildId, task);
     }
 
     // Create, update scheduled tasks for each guild
