@@ -173,13 +173,10 @@ module.exports = {
 
                 await finishedMsg.edit({embeds: [pointsTableEmbed]});
 
-
-
+                // Remove the quiz from the quizzesOnGoing array
+                quizzesOnGoing = quizzesOnGoing.filter((quiz) => quiz.channelId !== interaction.channelId);
             }
-
-
         }
-
     },
 };
 
