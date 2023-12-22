@@ -174,7 +174,9 @@ module.exports = {
                 await finishedMsg.edit({embeds: [pointsTableEmbed]});
 
                 // Remove the quiz from the quizzesOnGoing array
-                quizzesOnGoing = quizzesOnGoing.filter((quiz) => quiz.channelId !== interaction.channelId);
+                const index = quizzesOnGoing.findIndex(quiz => quiz.channelId === interaction.channelId);
+                if (index !== -1) quizzesOnGoing.splice(index, 1);    
+}
             }
         }
     },
