@@ -159,6 +159,11 @@ module.exports = {
                 await nextRnd.delete();
             }
             else {
+
+                // Remove the quiz from the quizzesOnGoing array
+                const index = quizzesOnGoing.findIndex(quiz => quiz.channelId === interaction.channelId);
+                if (index !== -1) quizzesOnGoing.splice(index, 1);   
+                
                 const finishedMsg = await interaction.channel.send({content: 'Quiz finished!'});
 
                 // Sort the points table
@@ -172,10 +177,7 @@ module.exports = {
                     .setColor('#4F9D55');
 
                 await finishedMsg.edit({embeds: [pointsTableEmbed]});
-
-                // Remove the quiz from the quizzesOnGoing array
-                const index = quizzesOnGoing.findIndex(quiz => quiz.channelId === interaction.channelId);
-                if (index !== -1) quizzesOnGoing.splice(index, 1);    
+ 
             }
         }
     },
