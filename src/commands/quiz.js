@@ -176,7 +176,6 @@ module.exports = {
                 // Remove the quiz from the quizzesOnGoing array
                 const index = quizzesOnGoing.findIndex(quiz => quiz.channelId === interaction.channelId);
                 if (index !== -1) quizzesOnGoing.splice(index, 1);    
-}
             }
         }
     },
